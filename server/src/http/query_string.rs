@@ -15,6 +15,13 @@ impl<'buffer> QueryString<'buffer> {
     pub fn get(&self, key: &str) -> Option<&Value>{
         self.data.get(key)
     }
+    pub fn get_as_text(&self, key: &str) -> &'buffer str {
+        let val = self.data.get(key).unwrap();
+        match val {
+            Value::Single(val) => val,
+            Value::Multiple(val) => val[0]
+        }
+    }
 }
 
 // a=1&b=2&c&d=&e===&d=7&d=abc
