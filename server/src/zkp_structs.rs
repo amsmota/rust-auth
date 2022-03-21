@@ -5,14 +5,14 @@ pub struct Math {
 
 }
 impl Math {
-    pub fn pow2(base: f32, pow: f32, modl: f32 ) -> f32 {
-        let b1 = ((pow as i32) / 2) as f32;
-        let b2 = b1 + (pow % 2.0);
-        let p1 = f32::powf(base, b1);
-        let p2 = f32::powf(base, b2);
+    pub fn pow2(base: u32, pow: u32, modl: u32 ) -> u32 {
+        let b1 = ((pow as i32) / 2) as u32;
+        let b2 = b1 + (pow % 2);
+        let p1 = u32::pow(base, b1);
+        let p2 = u32::pow(base, b2);
         let m1 = ((p1 % modl) * (p2 % modl)) % modl;
-        let mut m2 = ((f32::powf(base, b1) % modl) * (f32::powf(base, b2)) % modl) % modl;
-        let m3 =  f32::powf(base % modl, pow) % modl;
+        let mut m2 = ((u32::pow(base, b1) % modl) * (u32::pow(base, b2)) % modl) % modl;
+        let m3 =  u32::pow(base % modl, pow) % modl;
         m2 = m2;
         m1
     } 
@@ -26,16 +26,16 @@ pub struct AuthenticationRequest {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Agreement {
-    pub y1: f32,
-    pub y2: f32,
-    pub g: f32,
-    pub h: f32,
-    pub x: f32,
+    pub y1: u32,
+    pub y2: u32,
+    pub g: u32,
+    pub h: u32,
+    pub x: u32,
 }
 
 impl Agreement {
     pub fn new() -> Self {
-        Self { y1: 0.0, y2: 0.0, g: 0.0, h: 0.0, x: 0.0 }
+        Self { y1: 0, y2: 0, g: 0, h: 0, x: 0 }
     }
 }
 
@@ -49,21 +49,21 @@ impl Display for Agreement {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Commitment {
-    pub k: f32,
-    pub r1: f32,
-    pub r2: f32,
+    pub k: u32,
+    pub r1: u32,
+    pub r2: u32,
 }
 
 impl Commitment {
     pub fn new() -> Self {
-        Commitment { k: 0.0, r1: 0.0, r2: 0.0 }
+        Commitment { k: 0, r1: 0, r2: 0 }
     }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct ServerCommitment {
-    pub r1: f32,
-    pub r2: f32,
+    pub r1: u32,
+    pub r2: u32,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -81,10 +81,10 @@ impl User {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Answer {
-    pub s: f32,
+    pub s: u32,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct Challenge {
-    pub c: f32,
+    pub c: u32,
 }

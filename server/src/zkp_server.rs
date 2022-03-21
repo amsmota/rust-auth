@@ -18,7 +18,7 @@ impl ZkpServer {
         Self {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
-            challenge: Challenge { c: 0.0 },
+            challenge: Challenge { c: 0 },
         }
     }
 
@@ -28,7 +28,7 @@ impl ZkpServer {
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
         let mut rng = rand::thread_rng();
-        let c = 23.0; //rng.gen_range(1..10) as f32;
+        let c = 23; //rng.gen_range(1..10) as u32;
         self.challenge = Challenge { c };
 
         self.challenge
@@ -38,7 +38,7 @@ impl ZkpServer {
         let cc = self.commitments.get(&user);
         let commitment = match cc {
             Some(cc) => cc,
-            None => &ServerCommitment {r1: 0.0, r2: 0.0 },
+            None => &ServerCommitment {r1: 0, r2: 0 },
         };
 
         // r1 = g^s * y1^c and r2 = h^s * y2^c
@@ -49,11 +49,11 @@ impl ZkpServer {
         let h = commitment.r2;
         let y2 = self.agreement.y2;
 
-        let gs = Math::pow2(g, s, 107.0);
-        let hs = Math::pow2(h, s, 107.0);
+        let gs = Math::pow2(g, s, 107);
+        let hs = Math::pow2(h, s, 107);
 
-        let yc1 = Math::pow2(y1, c, 107.0);
-        let yc2 = Math::pow2(y2, c, 107.0);
+        let yc1 = Math::pow2(y1, c, 107);
+        let yc2 = Math::pow2(y2, c, 107);
 
         let rc1 = gs * yc1;
         let rc2 = hs * yc2;

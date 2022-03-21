@@ -13,7 +13,7 @@ use uuid::Uuid;
 pub struct ZkpClient {
     agreement: Agreement,
     commitments: HashMap<Uuid, Commitment>,
-    q: f32,
+    q: u32,
 }
 
 impl ZkpClient {
@@ -21,7 +21,7 @@ impl ZkpClient {
         Self {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
-            q: 107.0,
+            q: 107,
         }
     }
 
@@ -38,10 +38,10 @@ impl ZkpClient {
 
         //self.q = rng.gen_range(1..100);
 
-        let g = (rng.gen_range(1..100) as u32) as f32;
-        let h = (rng.gen_range(1..100) as u32) as f32;
+        let g = (rng.gen_range(1..100) as u32) as u32;
+        let h = (rng.gen_range(1..100) as u32) as u32;
 
-        let x = (rng.gen_range(1..10) as u32) as f32;
+        let x = (rng.gen_range(1..10) as u32) as u32;
         let y1 = Math::pow2(g, x, self.q);
         let y2 = Math::pow2(h, x, self.q);
 
@@ -52,7 +52,7 @@ impl ZkpClient {
 
     pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
         let mut rng = rand::thread_rng();
-        let k = (rng.gen_range(1..10) as u32) as f32;
+        let k = (rng.gen_range(1..10) as u32) as u32;
         let agr = self.agreement;
         let y1 = Math::pow2(agr.g, k, self.q);
         let y2 = Math::pow2(agr.h, k, self.q);
@@ -75,12 +75,12 @@ impl ZkpClient {
     pub fn prove_authentication(&self, user: User, challenge: Challenge) -> Answer {
         let c = challenge.c;
         let commitment = self.commitments.get(&user.uuid);
-        let k: f32 = match commitment {
+        let k: u32 = match commitment {
             Some(cc) => cc.k,
-            None => 0.0,
+            None => 0,
         };
-        if k == 0.0 {
-            return Answer { s: 0.0 };
+        if k == 0 {
+            return Answer { s: 0 };
         }
 
         // s = k - c * x (mod q)
@@ -90,6 +90,19 @@ impl ZkpClient {
         let s = (k - m) % q;
         //let s = ((k - ((c * x) % q)) % q).abs();
 
-        Answer { s: s.abs() }
+        Answer { s }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    
 }

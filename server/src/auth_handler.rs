@@ -46,7 +46,7 @@ impl Handler for AuthHandler {
                     dbg!(challenge);
                     let answer = self.client.prove_authentication(user, challenge);
                     dbg!(answer);
-                    if answer.s == 0.0 {
+                    if answer.s == 0 {
                         return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
                     }
                     let authenticated = self.server.verify_authentication(user, answer);
