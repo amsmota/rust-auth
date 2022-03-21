@@ -1,9 +1,7 @@
-
-use crate::zkp_client::Answer;
 use uuid::Uuid;
 use crate::zkp_server::ZkpServer;
 use crate::zkp_client::ZkpClient;
-use crate::zkp_client::User;
+use crate::zkp_structs::User;
 use super::server::Handler;
 use crate::http::{Method, Request, Response, StatusCode};
 
@@ -32,9 +30,9 @@ impl Handler for AuthHandler {
                 
                 "/client/register" => {
                     let user = User::new();
-                    let commit = self.client.create_register_commits(user);
-                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &commit.r1, &commit.r2);
-                    self.server.register(user, commit);
+                    let Commitment = self.client.create_register_commits(user);
+                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &Commitment.r1, &Commitment.r2);
+                    self.server.register(user, Commitment);
                     Response::new(StatusCode::Ok, Some(resp))
                 },
 
