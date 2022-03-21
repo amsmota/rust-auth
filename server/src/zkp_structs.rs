@@ -21,7 +21,7 @@ impl Math {
 #[derive(Copy, Clone, Debug)]
 pub struct AuthenticationRequest {
     // user: User,
-    // Commitment: RandomCommit,
+    // Commitment: ServerCommitment,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -61,7 +61,7 @@ impl Commitment {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct RandomCommit {
+pub struct ServerCommitment {
     pub r1: f32,
     pub r2: f32,
 }

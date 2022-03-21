@@ -1,16 +1,15 @@
+use crate::zkp_structs::ServerCommitment;
 use crate::zkp_structs::Math;
 use crate::zkp_structs::Challenge;
 use crate::zkp_structs::Answer;
 use crate::zkp_structs::AuthenticationRequest;
 use crate::zkp_structs::Agreement;
-use crate::zkp_structs::Commitment;
 use crate::zkp_structs::User;
-use rand::Rng;
 use std::collections::HashMap;
 
 pub struct ZkpServer {
     pub agreement: Agreement,
-    commitments: HashMap<User, Commitment>,
+    commitments: HashMap<User, ServerCommitment>,
     challenge: Challenge
 }
 
@@ -23,8 +22,8 @@ impl ZkpServer {
         }
     }
 
-    pub fn register(&mut self, user: User, Commitment: Commitment) {
-        self.commitments.insert(user, Commitment);
+    pub fn register(&mut self, user: User, commitment: ServerCommitment) {
+        self.commitments.insert(user, commitment);
     }
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
@@ -39,7 +38,7 @@ impl ZkpServer {
         let cc = self.commitments.get(&user);
         let commitment = match cc {
             Some(cc) => cc,
-            None => &Commitment {k: 0.0, r1: 0.0, r2: 0.0 },
+            None => &ServerCommitment {r1: 0.0, r2: 0.0 },
         };
 
         // r1 = g^s * y1^c and r2 = h^s * y2^c

@@ -1,3 +1,4 @@
+use crate::zkp_structs::ServerCommitment;
 use crate::zkp_structs::Agreement;
 use crate::zkp_structs::Commitment;
 use crate::zkp_structs::Answer;
@@ -25,23 +26,6 @@ impl ZkpClient {
     }
 
     pub fn agreement(&mut self) -> Agreement {
-        let (aggreement, _) = self.protocol();
-        self.agreement = aggreement;
-        aggreement
-    }
-
-    pub fn create_register_commits(&mut self, user: User) -> Commitment {
-        let mut rng = rand::thread_rng();
-        let k = (rng.gen_range(1..10) as u32) as f32;
-        let agr = self.agreement;
-        let y1 = Math::pow2(agr.g, k, self.q);
-        let y2 = Math::pow2(agr.h, k, self.q);
-        let commitment = Commitment { k: k, r1: y1, r2: y2};
-        self.commitments.insert(user.uuid, commitment);
-        commitment
-    }
-
-    fn protocol(&mut self) -> (Agreement, Commitment) {
         let mut rng = rand::thread_rng();
         // rng.gen::<u128>();
 
@@ -54,28 +38,34 @@ impl ZkpClient {
 
         //self.q = rng.gen_range(1..100);
 
-        let g = 5.0; //(rng.gen_range(1..100) as u32) as f32;
-        let h = 13.0; //(rng.gen_range(1..100) as u32) as f32;
+        let g = (rng.gen_range(1..100) as u32) as f32;
+        let h = (rng.gen_range(1..100) as u32) as f32;
 
-        let x = 3.0; //(rng.gen_range(1..10) as u32) as f32;
+        let x = (rng.gen_range(1..10) as u32) as f32;
         let y1 = Math::pow2(g, x, self.q);
         let y2 = Math::pow2(h, x, self.q);
 
-        let agreement = Agreement { y1, y2, g, h, x, };
-        let commitment = Commitment {
-            k: x,
-            r1: y1,
-            r2: y2,
-        };
+        let aggreement = Agreement { y1, y2, g, h, x, };
+        self.agreement = aggreement;
+        aggreement
+    }
 
-        (agreement, commitment)
+    pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
+        let mut rng = rand::thread_rng();
+        let k = (rng.gen_range(1..10) as u32) as f32;
+        let agr = self.agreement;
+        let y1 = Math::pow2(agr.g, k, self.q);
+        let y2 = Math::pow2(agr.h, k, self.q);
+        let commitment = Commitment { k: k, r1: y1, r2: y2};
+        self.commitments.insert(user.uuid, commitment);
+        ServerCommitment { r1: commitment.r1, r2: commitment.r2 }
     }
 
     pub fn create_authentication_request(&mut self, user: User) -> AuthenticationRequest {
         // let Commitment = self.create_register_commits(user);
         AuthenticationRequest {
             // user,
-            // Commitment: RandomCommit {
+            // Commitment: ServerCommitment {
             //     r1: Commitment.r1,
             //     r2: Commitment.r2,
             // },
@@ -96,19 +86,10 @@ impl ZkpClient {
         // s = k - c * x (mod q)
         let x = self.agreement.x;
         let q = self.q;
-        //let s = (k - c%q * x%q).abs();
+        let m = (c * x) % q;
+        let s = (k - m) % q;
+        //let s = ((k - ((c * x) % q)) % q).abs();
 
-        let s = ((k - ((c * x) % q)) % q).abs();
-
-        // let x = self.agreement.x;
-        // let xx = (c * x) as f32;
-        // // let s = f32::abs(r1 - xx).try_into().unwrap() as f32 % self.q  as f32;
-        // let s = k - xx;
-        // let ss = s % self.q;
-        // // let s = (r1%self.q).abs() - (xx % self.q);
-        // // let s2 = r1 - xx % self.q;
-        // // let ss = s.abs() as u32;
-
-        Answer { s }
+        Answer { s: s.abs() }
     }
 }

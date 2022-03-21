@@ -30,9 +30,9 @@ impl Handler for AuthHandler {
                 
                 "/client/register" => {
                     let user = User::new();
-                    let Commitment = self.client.create_register_commits(user);
-                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &Commitment.r1, &Commitment.r2);
-                    self.server.register(user, Commitment);
+                    let commitment = self.client.create_register_commits(user);
+                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &commitment.r1, &commitment.r2);
+                    self.server.register(user, commitment);
                     Response::new(StatusCode::Ok, Some(resp))
                 },
 
