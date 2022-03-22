@@ -1,10 +1,10 @@
-use crate::zkp_structs::ServerCommitment;
 use crate::zkp_structs::Agreement;
-use crate::zkp_structs::Commitment;
 use crate::zkp_structs::Answer;
 use crate::zkp_structs::AuthenticationRequest;
 use crate::zkp_structs::Challenge;
+use crate::zkp_structs::Commitment;
 use crate::zkp_structs::Math;
+use crate::zkp_structs::ServerCommitment;
 use crate::zkp_structs::User;
 use rand::Rng;
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ impl ZkpClient {
         let y1 = Math::pow2(g, x, self.q);
         let y2 = Math::pow2(h, x, self.q);
 
-        let aggreement = Agreement { y1, y2, g, h, x, };
+        let aggreement = Agreement { y1, y2, g, h, x };
         self.agreement = aggreement;
         aggreement
     }
@@ -47,9 +47,16 @@ impl ZkpClient {
         let agr = self.agreement;
         let y1 = Math::pow2(agr.g, k, self.q);
         let y2 = Math::pow2(agr.h, k, self.q);
-        let commitment = Commitment { k: k, r1: y1, r2: y2};
+        let commitment = Commitment {
+            k: k,
+            r1: y1,
+            r2: y2,
+        };
         self.commitments.insert(user.uuid, commitment);
-        ServerCommitment { r1: commitment.r1, r2: commitment.r2 }
+        ServerCommitment {
+            r1: commitment.r1,
+            r2: commitment.r2,
+        }
     }
 
     pub fn create_authentication_request(&mut self, user: User) -> AuthenticationRequest {
@@ -64,7 +71,6 @@ impl ZkpClient {
     }
 
     pub fn prove_authentication(&self, user: User, challenge: Challenge) -> Option<Answer> {
-        
         let cc = self.commitments.get(&user.uuid);
         let commitment = match cc {
             Some(cc) => cc,
@@ -78,7 +84,11 @@ impl ZkpClient {
         let c = challenge.c;
         let k = commitment.k;
         let q = self.q;
-        let s = (x * c + k) %q;
+        let s = (x * c + k) % q;
+        // let s2 = (k - ((c % q * x % q) % q)) % q;
+        let (s2, _) = (k % q).overflowing_sub(((c % q) * (x % q)) % q);
+
+        println!("{} / {}", s, s2);
 
         // let x = self.agreement.x;
         // let q = self.q;
@@ -89,6 +99,6 @@ impl ZkpClient {
         // dbg!(s, m);
         // if m { s = mul };
         //let s = ((k - ((c * x) % q)) % q).abs();
-        Some(Answer { s })
+        Some(Answer { s: s })
     }
 }
