@@ -46,12 +46,16 @@ impl Handler for AuthHandler {
                     dbg!(challenge);
                     let answer = self.client.prove_authentication(user, challenge);
                     dbg!(answer);
-                    if answer.s == 0 {
+                    if let None = answer {
                         return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
                     }
-                    let authenticated = self.server.verify_authentication(user, answer);
-                    dbg!(authenticated);
-                    Response::new(StatusCode::Ok, Some(format!("{}", authenticated)))
+                    // if let None {
+                    //     return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
+                    // }
+  
+                    let authenticated = self.server.verify_authentication(user, answer.unwrap());
+                    dbg!(&authenticated);
+                    Response::new(StatusCode::Ok, Some(authenticated))
                 }
                 _ => Response::new(StatusCode::NotFound, None)
             },

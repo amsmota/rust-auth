@@ -13,7 +13,7 @@ use uuid::Uuid;
 pub struct ZkpClient {
     agreement: Agreement,
     commitments: HashMap<Uuid, Commitment>,
-    q: u32,
+    q: u128,
 }
 
 impl ZkpClient {
@@ -21,27 +21,18 @@ impl ZkpClient {
         Self {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
-            q: 107,
+            q: 109,
         }
     }
 
     pub fn agreement(&mut self) -> Agreement {
         let mut rng = rand::thread_rng();
-        // rng.gen::<u128>();
 
         // (y1 == g^x1) && (y2 == h^x2)
-        // y1, y2, x1 = x2, k, r, c, s, g, h, y, q
-        // y1  y2              r  C  s  g  B     q
+        let g = rng.gen_range(1..100);
+        let h = rng.gen_range(1..100);
 
-        //  a, b, A, , C,  z
-        // (g,g^a, g^b and g^ab) =(",g,A,B,C,")")
-
-        //self.q = rng.gen_range(1..100);
-
-        let g = (rng.gen_range(1..100) as u32) as u32;
-        let h = (rng.gen_range(1..100) as u32) as u32;
-
-        let x = (rng.gen_range(1..10) as u32) as u32;
+        let x = rng.gen_range(1..16);
         let y1 = Math::pow2(g, x, self.q);
         let y2 = Math::pow2(h, x, self.q);
 
@@ -52,7 +43,7 @@ impl ZkpClient {
 
     pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
         let mut rng = rand::thread_rng();
-        let k = (rng.gen_range(1..10) as u32) as u32;
+        let k = rng.gen_range(1..16);
         let agr = self.agreement;
         let y1 = Math::pow2(agr.g, k, self.q);
         let y2 = Math::pow2(agr.h, k, self.q);
@@ -72,37 +63,24 @@ impl ZkpClient {
         }
     }
 
-    pub fn prove_authentication(&self, user: User, challenge: Challenge) -> Answer {
+    pub fn prove_authentication(&self, user: User, challenge: Challenge) -> Option<Answer> {
         let c = challenge.c;
         let commitment = self.commitments.get(&user.uuid);
-        let k: u32 = match commitment {
+        let k: u128 = match commitment {
             Some(cc) => cc.k,
-            None => 0,
+            None => return None,
         };
-        if k == 0 {
-            return Answer { s: 0 };
-        }
 
         // s = k - c * x (mod q)
         let x = self.agreement.x;
         let q = self.q;
-        let m = (c * x) % q;
-        let s = (k - m) % q;
+        let mul = (c  % q * x  % q) % q;
+        let sub = k % q;
+        println!("{} - {}", k, sub);
+        let (mut s, m) = sub.overflowing_sub(mul);
+        dbg!(s, m);
+        if m { s = mul };
         //let s = ((k - ((c * x) % q)) % q).abs();
-
-        Answer { s }
+        Some(Answer { s })
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    
 }

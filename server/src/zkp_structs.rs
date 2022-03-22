@@ -5,16 +5,12 @@ pub struct Math {
 
 }
 impl Math {
-    pub fn pow2(base: u32, pow: u32, modl: u32 ) -> u32 {
+    pub fn pow2(base: u128, pow: u128, modl: u128 ) -> u128 {
         let b1 = ((pow as i32) / 2) as u32;
-        let b2 = b1 + (pow % 2);
-        let p1 = u32::pow(base, b1);
-        let p2 = u32::pow(base, b2);
-        let m1 = ((p1 % modl) * (p2 % modl)) % modl;
-        let mut m2 = ((u32::pow(base, b1) % modl) * (u32::pow(base, b2)) % modl) % modl;
-        let m3 =  u32::pow(base % modl, pow) % modl;
-        m2 = m2;
-        m1
+        let b2 = b1 + (pow % 2) as u32;
+        let p1 = u128::pow(base % modl, b1) % modl;
+        let p2 = u128::pow(base % modl, b2) % modl;
+        ((p1 % modl) * (p2 % modl)) % modl
     } 
 }
 
@@ -26,11 +22,11 @@ pub struct AuthenticationRequest {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Agreement {
-    pub y1: u32,
-    pub y2: u32,
-    pub g: u32,
-    pub h: u32,
-    pub x: u32,
+    pub y1: u128,
+    pub y2: u128,
+    pub g: u128,
+    pub h: u128,
+    pub x: u128,
 }
 
 impl Agreement {
@@ -49,9 +45,9 @@ impl Display for Agreement {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Commitment {
-    pub k: u32,
-    pub r1: u32,
-    pub r2: u32,
+    pub k: u128,
+    pub r1: u128,
+    pub r2: u128,
 }
 
 impl Commitment {
@@ -62,8 +58,8 @@ impl Commitment {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ServerCommitment {
-    pub r1: u32,
-    pub r2: u32,
+    pub r1: u128,
+    pub r2: u128,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -81,10 +77,10 @@ impl User {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Answer {
-    pub s: u32,
+    pub s: u128,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct Challenge {
-    pub c: u32,
+    pub c: u128,
 }
