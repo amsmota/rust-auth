@@ -5,6 +5,7 @@ mod http;
 mod auth_handler;
 mod zkp_server;
 mod zkp_client;
+mod zkp_structs;
 
 use server::Server;
 use auth_handler::AuthHandler;

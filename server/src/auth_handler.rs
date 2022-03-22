@@ -1,9 +1,7 @@
-
-use crate::zkp_client::Answer;
 use uuid::Uuid;
 use crate::zkp_server::ZkpServer;
 use crate::zkp_client::ZkpClient;
-use crate::zkp_client::User;
+use crate::zkp_structs::User;
 use super::server::Handler;
 use crate::http::{Method, Request, Response, StatusCode};
 
@@ -32,9 +30,9 @@ impl Handler for AuthHandler {
                 
                 "/client/register" => {
                     let user = User::new();
-                    let commit = self.client.create_register_commits(user);
-                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &commit.r1, &commit.r2);
-                    self.server.register(user, commit);
+                    let commitment = self.client.create_register_commits(user);
+                    let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &commitment.r1, &commitment.r2);
+                    self.server.register(user, commitment);
                     Response::new(StatusCode::Ok, Some(resp))
                 },
 
@@ -48,13 +46,20 @@ impl Handler for AuthHandler {
                     dbg!(challenge);
                     let answer = self.client.prove_authentication(user, challenge);
                     dbg!(answer);
-                    if answer.s == 0.0 {
+                    if let None = answer {
                         return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
                     }
-                    let authenticated = self.server.verify_authentication(user, answer);
-                    dbg!(authenticated);
-                    Response::new(StatusCode::Ok, Some(format!("{}", authenticated)))
-                }
+                    let authenticated = self.server.verify_authentication(user, answer.unwrap());
+                    dbg!(&authenticated);
+                    Response::new(StatusCode::Ok, Some(authenticated))
+                },
+                "/server/q" => {
+                    let qq = request.query_string().unwrap().get_as_text("q").to_string();
+                    self.client.q = qq.parse::<u128>().unwrap();
+                    self.server.q = qq.parse::<u128>().unwrap();
+                    Response::new(StatusCode::Ok, None)
+                },
+
                 _ => Response::new(StatusCode::NotFound, None)
             },
             _ => Response::new(StatusCode::NotFound, None),
