@@ -31,9 +31,10 @@ impl ZkpServer {
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
         let mut rng = rand::thread_rng();
-        let b = rng.gen_range(1..10);
-        let x = rng.gen_range(1..10);
+        let b = rng.gen_range(2..100);
+        let x = rng.gen_range(2..10);
         let c = Math::pow2(b, x, self.q);
+        // let c = rng.gen_range(1..10);
         self.challenge = Challenge { c };
         self.challenge
     }
@@ -48,11 +49,11 @@ impl ZkpServer {
         dbg!(answer.s);
 
         // r1 = g^s * y1^c and r2 = h^s * y2^c
-        let g = commitment.r1;
+        let g = self.agreement.g;
         let s = answer.s;
         let y1 = self.agreement.y1;
         let c = self.challenge.c;
-        let h = commitment.r2;
+        let h = self.agreement.h;
         let y2 = self.agreement.y2;
 
         let gs = Math::pow2(g, s, self.q);
@@ -64,11 +65,7 @@ impl ZkpServer {
         let rc1 = (gs * yc1) % self.q ;
         let rc2 = (hs * yc2) % self.q;
 
-        dbg!(rc1);
-        dbg!(rc2);
-
         let rr = rc1 == commitment.r1 && rc2 == commitment.r2;
         format!("{}: ({} = {}) and ({} = {})", rr, rc1, commitment.r1, rc2, commitment.r2)
-
     }
 }

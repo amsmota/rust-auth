@@ -29,10 +29,10 @@ impl ZkpClient {
         let mut rng = rand::thread_rng();
 
         // (y1 == g^x1) && (y2 == h^x2)
-        let g = rng.gen_range(1..100);
-        let h = rng.gen_range(1..100);
+        let g = rng.gen_range(2..1000);
+        let h = rng.gen_range(2..1000);
 
-        let x = rng.gen_range(1..16);
+        let x = rng.gen_range(2..16);
         let y1 = Math::pow2(g, x, self.q);
         let y2 = Math::pow2(h, x, self.q);
 
@@ -43,7 +43,7 @@ impl ZkpClient {
 
     pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
         let mut rng = rand::thread_rng();
-        let k = rng.gen_range(1..16);
+        let k = rng.gen_range(16..64);
         let agr = self.agreement;
         let y1 = Math::pow2(agr.g, k, self.q);
         let y2 = Math::pow2(agr.h, k, self.q);
@@ -79,26 +79,17 @@ impl ZkpClient {
 
         // s = k - c * x (mod q)
         // z = w * e + r (mod q)
-        // s = z, x = w, c = e, k = r
+        // z = s, w = x, e = c, r = k
         let x = self.agreement.x;
         let c = challenge.c;
         let k = commitment.k;
         let q = self.q;
-        let s = (x * c + k) % q;
-        // let s2 = (k - ((c % q * x % q) % q)) % q;
-        let (s2, _) = (k % q).overflowing_sub(((c % q) * (x % q)) % q);
-
-        println!("{} / {}", s, s2);
-
-        // let x = self.agreement.x;
-        // let q = self.q;
-        // let mul = (c  % q * x  % q) % q;
-        // let sub = k % q;
-        // println!("{} - {}", k, sub);
-        // let (mut s, m) = sub.overflowing_sub(mul);
-        // dbg!(s, m);
-        // if m { s = mul };
-        //let s = ((k - ((c * x) % q)) % q).abs();
-        Some(Answer { s: s })
+        let s = if k >= c * x {
+            (k - c * x) % q
+        } else {
+            (x * c + k) % q
+        };
+        println!("{} / {} / {}  / {}", k, x, x*c, k >= c * x);
+        Some(Answer { s })
     }
 }

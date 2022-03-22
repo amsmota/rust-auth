@@ -12,7 +12,7 @@ impl Math {
         let p2 = u128::pow(base % modl, b2) % modl;
         ((p1 % modl) * (p2 % modl)) % modl
     } 
-}
+} 
 
 #[derive(Copy, Clone, Debug)]
 pub struct AuthenticationRequest {
