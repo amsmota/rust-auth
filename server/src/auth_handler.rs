@@ -56,7 +56,14 @@ impl Handler for AuthHandler {
                     let authenticated = self.server.verify_authentication(user, answer.unwrap());
                     dbg!(&authenticated);
                     Response::new(StatusCode::Ok, Some(authenticated))
-                }
+                },
+                "/server/q" => {
+                    let qq = request.query_string().unwrap().get_as_text("q").to_string();
+                    self.client.q = qq.parse::<u128>().unwrap();
+                    self.server.q = qq.parse::<u128>().unwrap();
+                    Response::new(StatusCode::Ok, None)
+                },
+
                 _ => Response::new(StatusCode::NotFound, None)
             },
             _ => Response::new(StatusCode::NotFound, None),

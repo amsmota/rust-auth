@@ -13,7 +13,7 @@ use uuid::Uuid;
 pub struct ZkpClient {
     agreement: Agreement,
     commitments: HashMap<Uuid, Commitment>,
-    q: u128,
+    pub q: u128,
 }
 
 impl ZkpClient {
@@ -21,7 +21,7 @@ impl ZkpClient {
         Self {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
-            q: 109,
+            q: 19,
         }
     }
 
@@ -64,22 +64,30 @@ impl ZkpClient {
     }
 
     pub fn prove_authentication(&self, user: User, challenge: Challenge) -> Option<Answer> {
-        let c = challenge.c;
-        let commitment = self.commitments.get(&user.uuid);
-        let k: u128 = match commitment {
-            Some(cc) => cc.k,
+        
+        let cc = self.commitments.get(&user.uuid);
+        let commitment = match cc {
+            Some(cc) => cc,
             None => return None,
         };
 
         // s = k - c * x (mod q)
+        // z = w * e + r (mod q)
+        // s = z, x = w, c = e, k = r
         let x = self.agreement.x;
+        let c = challenge.c;
+        let k = commitment.k;
         let q = self.q;
-        let mul = (c  % q * x  % q) % q;
-        let sub = k % q;
-        println!("{} - {}", k, sub);
-        let (mut s, m) = sub.overflowing_sub(mul);
-        dbg!(s, m);
-        if m { s = mul };
+        let s = (x * c + k) %q;
+
+        // let x = self.agreement.x;
+        // let q = self.q;
+        // let mul = (c  % q * x  % q) % q;
+        // let sub = k % q;
+        // println!("{} - {}", k, sub);
+        // let (mut s, m) = sub.overflowing_sub(mul);
+        // dbg!(s, m);
+        // if m { s = mul };
         //let s = ((k - ((c * x) % q)) % q).abs();
         Some(Answer { s })
     }

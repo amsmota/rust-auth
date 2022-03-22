@@ -12,7 +12,7 @@ pub struct ZkpServer {
     pub agreement: Agreement,
     commitments: HashMap<User, ServerCommitment>,
     challenge: Challenge,
-    q: u128,
+    pub q: u128,
 }
 
 impl ZkpServer {
@@ -21,7 +21,7 @@ impl ZkpServer {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
             challenge: Challenge { c: 0 },
-            q: 109,
+            q: 19,
         }
     }
 
@@ -31,7 +31,9 @@ impl ZkpServer {
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
         let mut rng = rand::thread_rng();
-        let c = rng.gen_range(1..16);
+        let b = rng.gen_range(1..10);
+        let x = rng.gen_range(1..10);
+        let c = Math::pow2(b, x, self.q);
         self.challenge = Challenge { c };
         self.challenge
     }
