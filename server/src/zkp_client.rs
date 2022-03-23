@@ -43,14 +43,16 @@ impl ZkpClient {
 
     pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
         let mut rng = rand::thread_rng();
-        let k = rng.gen_range(16..64);
         let agr = self.agreement;
-        let y1 = Math::pow2(agr.g, k, self.q);
-        let y2 = Math::pow2(agr.h, k, self.q);
+        
+        // (r1, r2) = (g^k, h^k)
+        let k = rng.gen_range(16..64);
+        let gk = Math::pow2(agr.g, k, self.q);
+        let hk = Math::pow2(agr.h, k, self.q);
         let commitment = Commitment {
             k: k,
-            r1: y1,
-            r2: y2,
+            r1: gk,
+            r2: hk,
         };
         self.commitments.insert(user.uuid, commitment);
         ServerCommitment {
