@@ -32,6 +32,7 @@ impl Handler for AuthHandler {
                     let user = User::new();
                     let commitment = self.client.create_register_commits(user);
                     let resp = format!("uuid: {}\n\r (r1, r2) = ({}, {})", user.uuid, &commitment.r1, &commitment.r2);
+                    // TODO make http call instead
                     self.server.register(user, commitment);
                     Response::new(StatusCode::Ok, Some(resp))
                 },
@@ -42,13 +43,16 @@ impl Handler for AuthHandler {
                     dbg!(user);
                     let auth_request = self.client.create_authentication_request(user);
                     dbg!(auth_request);
+                    // TODO make http call instead
                     let challenge = self.server.create_authentication_challenge(user, auth_request);
                     dbg!(challenge);
+                    // TODO create new endpoint for this response 
                     let answer = self.client.prove_authentication(user, challenge);
                     dbg!(answer);
                     if let None = answer {
                         return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
                     }
+                    // TODO make http call instead
                     let authenticated = self.server.verify_authentication(user, answer.unwrap());
                     dbg!(&authenticated);
                     Response::new(StatusCode::Ok, Some(authenticated))
