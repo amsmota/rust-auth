@@ -3,9 +3,10 @@ use crate::zkp_structs::Answer;
 use crate::zkp_structs::AuthenticationRequest;
 use crate::zkp_structs::Challenge;
 use crate::zkp_structs::Commitment;
-use crate::zkp_structs::Math;
 use crate::zkp_structs::ServerCommitment;
 use crate::zkp_structs::User;
+use num::BigUint;
+use num::ToPrimitive;
 use rand::Rng;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -13,7 +14,7 @@ use uuid::Uuid;
 pub struct ZkpClient {
     agreement: Agreement,
     commitments: HashMap<Uuid, Commitment>,
-    pub q: u128,
+    pub q: BigUint,
 }
 
 impl ZkpClient {
@@ -21,7 +22,7 @@ impl ZkpClient {
         Self {
             agreement: Agreement::new(),
             commitments: HashMap::new(),
-            q: 19,
+            q: BigUint::from(10009u128),
         }
     }
 
@@ -29,34 +30,35 @@ impl ZkpClient {
         let mut rng = rand::thread_rng();
 
         // (y1 == g^x1) && (y2 == h^x2)
-        let g = rng.gen_range(2..1000);
-        let h = rng.gen_range(2..1000);
+        let g = BigUint::from(rng.gen_range(1..10)as u32);
+        let h = BigUint::from(rng.gen_range(1..10)as u32);
 
-        let x = rng.gen_range(2..16);
-        let y1 = Math::pow2(g, x, self.q);
-        let y2 = Math::pow2(h, x, self.q);
-
+        let x =  BigUint::from(3u32);
+        let y1 = BigUint::from(g.clone()).modpow(&x, &self.q);
+        let y2 = BigUint::from(h.clone()).modpow(&x, &self.q);
         let aggreement = Agreement { y1, y2, g, h, x };
         self.agreement = aggreement;
-        aggreement
+        self.agreement.clone()
     }
 
     pub fn create_register_commits(&mut self, user: User) -> ServerCommitment {
         let mut rng = rand::thread_rng();
-        let k = rng.gen_range(16..64);
-        let agr = self.agreement;
-        let y1 = Math::pow2(agr.g, k, self.q);
-        let y2 = Math::pow2(agr.h, k, self.q);
+        let k =  BigUint::from(9u32); //BigUint::from(rng.gen_range(1..100)as u32) % &self.q;
+        let agreement = self.agreement.clone();
+
+        let y1 = BigUint::from(agreement.g).modpow(&k, &self.q);
+        let y2 = BigUint::from(agreement.h).modpow(&k, &self.q);
         let commitment = Commitment {
-            k: k,
-            r1: y1,
-            r2: y2,
+            k: BigUint::from(9u32),
+            r1: agreement.y1,
+            r2: agreement.y2,
+        };
+        let serverCommitment = ServerCommitment {
+            r1: commitment.r1.clone(),
+            r2: commitment.r2.clone(),
         };
         self.commitments.insert(user.uuid, commitment);
-        ServerCommitment {
-            r1: commitment.r1,
-            r2: commitment.r2,
-        }
+        serverCommitment
     }
 
     pub fn create_authentication_request(&mut self, user: User) -> AuthenticationRequest {
@@ -80,16 +82,18 @@ impl ZkpClient {
         // s = k - c * x (mod q)
         // z = w * e + r (mod q)
         // z = s, w = x, e = c, r = k
-        let x = self.agreement.x;
+        let x = &self.agreement.x;
         let c = challenge.c;
-        let k = commitment.k;
-        let q = self.q;
-        let s = if k >= c * x {
-            (k - c * x) % q
+        let k = &commitment.k;
+        let q = &self.q;
+        let s = if k >= &(c * x) {
+            (k + c * x) % q
         } else {
             (x * c + k) % q
         };
-        println!("{} / {} / {}  / {}", k, x, x*c, k >= c * x);
-        Some(Answer { s })
+        println!("{} / {} / {}  / {}", k, x, x * c, k >= &(c * x));
+        Some(Answer {
+            s: s.to_u32().unwrap(),
+        })
     }
 }

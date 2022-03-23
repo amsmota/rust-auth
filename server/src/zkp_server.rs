@@ -1,5 +1,4 @@
 use crate::zkp_structs::ServerCommitment;
-use crate::zkp_structs::Math;
 use crate::zkp_structs::Challenge;
 use crate::zkp_structs::Answer;
 use crate::zkp_structs::AuthenticationRequest;
@@ -7,21 +6,26 @@ use crate::zkp_structs::Agreement;
 use crate::zkp_structs::User;
 use std::collections::HashMap;
 use rand::Rng;
+use num::BigUint;
+use num::Zero;
+use num::ToPrimitive;
 
 pub struct ZkpServer {
+    z: BigUint,
     pub agreement: Agreement,
+    pub q: BigUint,
     commitments: HashMap<User, ServerCommitment>,
     challenge: Challenge,
-    pub q: u128,
 }
 
 impl ZkpServer {
     pub fn new() -> Self {
         Self {
+            z: BigUint::zero(),
             agreement: Agreement::new(),
             commitments: HashMap::new(),
             challenge: Challenge { c: 0 },
-            q: 19,
+            q: BigUint::from(10009u128),
         }
     }
 
@@ -31,11 +35,10 @@ impl ZkpServer {
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
         let mut rng = rand::thread_rng();
-        let b = rng.gen_range(2..100);
-        let x = rng.gen_range(2..10);
-        let c = Math::pow2(b, x, self.q);
-        // let c = rng.gen_range(1..10);
-        self.challenge = Challenge { c };
+        let b = BigUint::from(rng.gen_range(2..100)as u32);
+        let x = BigUint::from(rng.gen_range(2..100)as u32);
+        let c: u32 = BigUint::from(b).modpow(&x, &self.q).to_u32().unwrap();
+        self.challenge = Challenge { c: 2 };
         self.challenge
     }
 
@@ -43,27 +46,40 @@ impl ZkpServer {
         let cc = self.commitments.get(&user);
         let commitment = match cc {
             Some(cc) => cc,
-            None => &ServerCommitment {r1: 0, r2: 0 },
+            None => return "uuid not found".to_string(),
         };
 
         dbg!(answer.s);
 
         // r1 = g^s * y1^c and r2 = h^s * y2^c
-        let g = self.agreement.g;
+        let agreement = self.agreement.clone();
+        dbg!(&self.agreement);
+        dbg!(&agreement);
+        dbg!(&agreement.g);
+        let g = agreement.g;
         let s = answer.s;
-        let y1 = self.agreement.y1;
+        let y1 = agreement.y1;
         let c = self.challenge.c;
-        let h = self.agreement.h;
-        let y2 = self.agreement.y2;
+        let h = agreement.h;
+        let y2 = agreement.y2;
 
-        let gs = Math::pow2(g, s, self.q);
-        let hs = Math::pow2(h, s, self.q);
+        // let gs = Math::pow2(g, s, self.q);
+        // let hs = Math::pow2(h, s, self.q);
 
-        let yc1 = Math::pow2(y1, c, self.q);
-        let yc2 = Math::pow2(y2, c, self.q);
+        // let yc1 = Math::pow2(y1, c, self.q);
+        // let yc2 = Math::pow2(y2, c, self.q);
 
-        let rc1 = (gs * yc1) % self.q ;
-        let rc2 = (hs * yc2) % self.q;
+        let gs = BigUint::from(g).pow(s) % &self.q;
+
+        let hs = BigUint::from(h).pow(s) % &self.q;
+
+        let yc1 = BigUint::from(y1).pow(c) % &self.q;
+
+
+        let yc2 = BigUint::from(y2).pow(c) % &self.q;
+
+        let rc1 = (gs) % &self.q;
+        let rc2 = (yc1*&commitment.r1) ;
 
         let rr = rc1 == commitment.r1 && rc2 == commitment.r2;
         format!("{}: ({} = {}) and ({} = {})", rr, rc1, commitment.r1, rc2, commitment.r2)

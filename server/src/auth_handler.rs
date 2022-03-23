@@ -1,10 +1,11 @@
-use uuid::Uuid;
 use crate::zkp_server::ZkpServer;
 use crate::zkp_client::ZkpClient;
 use crate::zkp_structs::User;
 use super::server::Handler;
 use crate::http::{Method, Request, Response, StatusCode};
-
+use uuid::Uuid;
+use num::BigUint;
+use std::str::FromStr;
 
 pub struct AuthHandler {
     client: ZkpClient,
@@ -24,7 +25,7 @@ impl Handler for AuthHandler {
 
                 "/client/agreement" => {
                     let aggreement = self.client.agreement();
-                    self.server.agreement = aggreement;
+                    self.server.agreement = aggreement.clone();
                     Response::new(StatusCode::Ok, Some(aggreement.to_string()))
                 },
                 
@@ -48,7 +49,7 @@ impl Handler for AuthHandler {
                     dbg!(challenge);
                     // TODO create new endpoint for this response 
                     let answer = self.client.prove_authentication(user, challenge);
-                    dbg!(answer);
+                    dbg!(&answer);
                     if let None = answer {
                         return Response::new(StatusCode::NotFound, Some("uuid not found".to_string()));
                     }
@@ -58,9 +59,10 @@ impl Handler for AuthHandler {
                     Response::new(StatusCode::Ok, Some(authenticated))
                 },
                 "/server/q" => {
-                    let qq = request.query_string().unwrap().get_as_text("q").to_string();
-                    self.client.q = qq.parse::<u128>().unwrap();
-                    self.server.q = qq.parse::<u128>().unwrap();
+                    let qq = request.query_string().unwrap().get_as_text("q");
+                    self.client.q = BigUint::from_str(qq).unwrap();
+                    self.server.q = BigUint::from_str(qq).unwrap();
+                    dbg!(qq);
                     Response::new(StatusCode::Ok, None)
                 },
 
