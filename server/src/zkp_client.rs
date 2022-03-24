@@ -29,12 +29,12 @@ impl ZkpClient {
         let mut rng = rand::thread_rng();
 
         // (y1 == g^x1) && (y2 == h^x2)
-        let g = rng.gen_range(2..1000);
-        let h = rng.gen_range(2..1000);
+        let g = rng.gen_range(2..100);
+        let h = rng.gen_range(2..100);
 
         let x = rng.gen_range(2..16);
-        let y1 = Math::pow2(g, x, self.q);
-        let y2 = Math::pow2(h, x, self.q);
+        let y1 = Math::umodpow(g, x, self.q);
+        let y2 = Math::umodpow(h, x, self.q);
 
         let aggreement = Agreement { y1, y2, g, h, x };
         self.agreement = aggreement;
@@ -47,8 +47,8 @@ impl ZkpClient {
         
         // (r1, r2) = (g^k, h^k)
         let k = rng.gen_range(16..64);
-        let gk = Math::pow2(agr.g, k, self.q);
-        let hk = Math::pow2(agr.h, k, self.q);
+        let gk = Math::umodpow(agr.g, k, self.q);
+        let hk = Math::umodpow(agr.h, k, self.q);
         let commitment = Commitment {
             k: k,
             r1: gk,
@@ -86,11 +86,8 @@ impl ZkpClient {
         let c = challenge.c;
         let k = commitment.k;
         let q = self.q;
-        let s = if k >= c * x {
-            (k - c * x) % q
-        } else {
-            (x * c + k) % q
-        };
+        let s = ((k - c * x) as i128) % q as i128;
+
         println!("{} / {} / {}  / {}", k, x, x*c, k >= c * x);
         Some(Answer { s })
     }

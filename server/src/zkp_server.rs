@@ -31,10 +31,10 @@ impl ZkpServer {
 
     pub fn create_authentication_challenge(&mut self, user: User, auth_request: AuthenticationRequest) -> Challenge {
         let mut rng = rand::thread_rng();
-        let b = rng.gen_range(2..100);
-        let x = rng.gen_range(2..10);
-        let c = Math::pow2(b, x, self.q);
-        // let c = rng.gen_range(1..10);
+        // let b = rng.gen_range(2..100);
+        // let x = rng.gen_range(2..10);
+        // let c = Math::modpow(b, x, self.q);
+        let c = rng.gen_range(1..10);
         self.challenge = Challenge { c };
         self.challenge
     }
@@ -56,16 +56,16 @@ impl ZkpServer {
         let h = self.agreement.h;
         let y2 = self.agreement.y2;
 
-        let gs = Math::pow2(g, s, self.q);
-        let hs = Math::pow2(h, s, self.q);
+        let gs = Math::imodpow(g, s, self.q);
+        let hs = Math::imodpow(h, s, self.q);
 
-        let yc1 = Math::pow2(y1, c, self.q);
-        let yc2 = Math::pow2(y2, c, self.q);
+        let yc1 = Math::umodpow(y1, c, self.q);
+        let yc2 = Math::umodpow(y2, c, self.q);
 
-        let rc1 = (gs * yc1) % self.q ;
-        let rc2 = (hs * yc2) % self.q;
+        let rc1 = Math::imul(gs, yc1);
+        let rc2 = Math::imul(hs, yc2);
 
-        let rr = rc1 == commitment.r1 && rc2 == commitment.r2;
+        let rr = rc1 == commitment.r1 as i128 && rc2 == commitment.r2 as i128;
         format!("{}: ({} = {}) and ({} = {})", rr, rc1, commitment.r1, rc2, commitment.r2)
     }
 }

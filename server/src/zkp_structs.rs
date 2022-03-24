@@ -1,23 +1,61 @@
+use num::BigInt;
+use num::BigUint;
+use num::ToPrimitive;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::ops::Mul;
 use uuid::Uuid;
 
-pub struct Math {
-
-}
+pub struct Math {}
 impl Math {
-    pub fn pow2(base: u128, pow: u128, modl: u128 ) -> u128 {
-        let b1 = ((pow as i32) / 2) as u32;
-        let b2 = b1 + (pow % 2) as u32;
-        let p1 = u128::pow(base % modl, b1) % modl;
-        let p2 = u128::pow(base % modl, b2) % modl;
-        ((p1 % modl) * (p2 % modl)) % modl
-    } 
-} 
+    pub fn umodpow(base: u128, pow: u128, modl: u128) -> u128 {
+        let p = BigUint::from(pow);
+        let m = BigUint::from(modl);
+        let result = BigUint::from(base).modpow(&p, &m).to_u128();
+        match result {
+            Some(r) => r,
+            None => 0,
+        }
+    }
+
+    pub fn imodpow(base: u128, pow: i128, modl: u128) -> i128 {
+        let p = BigInt::from(pow);
+        let m = BigInt::from(modl);
+        let result = BigInt::from(base).modpow(&p, &m).to_i128();
+        match result {
+            Some(r) => r,
+            None => 0,
+        }
+    }
+
+    pub fn pow(base: u128, pow: u128) -> u128 {
+        let result = BigUint::from(base).pow(pow as u32).to_u128();
+        match result {
+            Some(r) => r,
+            None => 0,
+        }
+    }
+
+    pub fn umul(op1: u128, op2: u128) -> u128 {
+        let result = BigUint::from(op1).mul(&op2).to_u128();
+        match result {
+            Some(r) => r,
+            None => 0,
+        }
+    }
+
+    pub fn imul(op1: i128, op2: u128) -> i128 {
+        let result = BigInt::from(op1).mul(&op2).to_i128();
+        match result {
+            Some(r) => r,
+            None => 0,
+        }
+    }
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct AuthenticationRequest {
     // user: User,
-    // Commitment: ServerCommitment,
+// Commitment: ServerCommitment,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -31,7 +69,13 @@ pub struct Agreement {
 
 impl Agreement {
     pub fn new() -> Self {
-        Self { y1: 0, y2: 0, g: 0, h: 0, x: 0 }
+        Self {
+            y1: 0,
+            y2: 0,
+            g: 0,
+            h: 0,
+            x: 0,
+        }
     }
 }
 
@@ -39,7 +83,11 @@ impl Display for Agreement {
     // (y1 == g^x1) && (y2 == h^x2)
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "(y1 == g^x1) && (y2 == h^x2)\r\n");
-        write!(f, "({} == {}^{}) && ({} == {}^{})", self.y1, self.g, self.x, self.y2, self.h, self.x)
+        write!(
+            f,
+            "({} == {}^{}) && ({} == {}^{})",
+            self.y1, self.g, self.x, self.y2, self.h, self.x
+        )
     }
 }
 
@@ -77,7 +125,7 @@ impl User {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Answer {
-    pub s: u128,
+    pub s: i128,
 }
 
 #[derive(Copy, Clone, Debug)]
